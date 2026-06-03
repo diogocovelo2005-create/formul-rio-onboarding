@@ -63,10 +63,10 @@ function Field({
 }) {
   const showError = missing && required && !value?.trim();
   const base =
-    "w-full px-3.5 py-3 text-[15px] rounded-[10px] outline-none transition-colors font-[inherit] leading-relaxed";
+    "w-full px-4 py-3.5 text-[15px] rounded-[12px] outline-none transition-all font-[inherit] leading-relaxed shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
   const border = showError
-    ? "border-[1.5px] border-error bg-error-bg"
-    : "border-[1.5px] border-border bg-background focus:border-accent";
+    ? "border-[1.5px] border-error bg-error-bg text-foreground placeholder:text-error-label/50"
+    : "border-[1.5px] border-border bg-background/70 text-foreground placeholder:text-muted/50 focus:border-accent focus:bg-card focus:shadow-[0_0_0_4px_rgba(255,212,0,0.12)]";
 
   return (
     <div className="mb-5">
@@ -105,23 +105,14 @@ function Field({
   );
 }
 
-function Ex({ children }: { children: string }) {
-  return (
-    <div className="bg-example-bg border border-dashed border-example-border rounded-lg px-3.5 py-2.5 text-[13px] text-example-text -mt-3 mb-5 leading-relaxed whitespace-pre-line">
-      <span className="font-semibold text-accent mr-1">Exemplo:</span>
-      {children}
-    </div>
-  );
-}
-
 function SectionTitle({ letter, title }: { letter: string; title: string }) {
   return (
-    <div className="flex items-center gap-2.5 mb-5">
-      <span className="bg-accent text-white w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0">
+    <div className="flex items-center gap-3 mb-6">
+      <span className="bg-accent text-background w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 shadow-[0_0_24px_rgba(255,212,0,0.25)]">
         {letter}
       </span>
       <h3
-        className="text-[17px] font-bold text-foreground"
+        className="text-[20px] font-bold text-foreground"
         style={{ fontFamily: "var(--font-display)" }}
       >
         {title}
@@ -131,7 +122,7 @@ function SectionTitle({ letter, title }: { letter: string; title: string }) {
 }
 
 const Divider = () => (
-  <div className="border-t border-border-dark my-7" />
+  <div className="border-t border-border my-8" />
 );
 
 /* ─── STEP COMPONENTS ─── */
@@ -147,12 +138,11 @@ function Step1({ d, s, m }: StepProps) {
     <>
       <SectionTitle letter="A" title="O Negócio" />
       <Field label="Nome do negócio" placeholder="Barbearia do Zé" value={d.nome} onChange={(v) => s("nome", v)} required missing={m} />
-      <Field label="Setor de atividade" placeholder="Barbearia" value={d.setor} onChange={(v) => s("setor", v)} required missing={m} hint="Ex: Barbearia, Clínica de Estética, Estúdio de Tatuagens, Explicações, Psicologia, Oficina" />
+      <Field label="Setor de atividade" placeholder="Barbearia, Clínica de Estética, Estúdio de Tatuagens, Explicações, Psicologia, Oficina" value={d.setor} onChange={(v) => s("setor", v)} required missing={m} />
       <Field label="Morada completa" placeholder="Rua de Santa Catarina 123, 4000-001 Porto" value={d.morada} onChange={(v) => s("morada", v)} required missing={m} hint="Rua, número, código postal e cidade" />
       <Field label="Link do Google Maps" placeholder="https://maps.google.com/..." value={d.maps_link} onChange={(v) => s("maps_link", v)} required missing={m} hint="Pesquise o seu negócio no Google Maps → clique em «Partilhar» → copie o link" />
       <Field label="Horário de funcionamento normal" placeholder={"Seg-Sex: 9h-19h\nSáb: 9h-13h\nDom: fechado"} value={d.horarios} onChange={(v) => s("horarios", v)} required missing={m} multi rows={3} hint="Escreva dia a dia" />
-      <Field label="Exceções ao horário ao longo do ano" placeholder="Fechamos aos feriados. Em agosto fechamos na 2ª quinzena." value={d.excecoes} onChange={(v) => s("excecoes", v)} multi rows={2} hint="Feriados, férias, horários especiais — se não houver, deixe em branco" />
-      <Ex>{`"Fechamos aos feriados"\n"Em agosto fechamos para férias na 2ª quinzena"\n"Na véspera de Natal fechamos mais cedo às 16h"`}</Ex>
+      <Field label="Exceções ao horário ao longo do ano" placeholder={"Fechamos aos feriados.\nEm agosto fechamos para férias na 2ª quinzena.\nNa véspera de Natal fechamos mais cedo às 16h."} value={d.excecoes} onChange={(v) => s("excecoes", v)} multi rows={3} hint="Feriados, férias, horários especiais — se não houver, deixe em branco" />
     </>
   );
 }
@@ -164,10 +154,8 @@ function Step2({ d, s, m }: StepProps) {
       <Field label="Nomes dos profissionais (que recebem marcações)" placeholder="João, Maria, Rita" value={d.profissionais} onChange={(v) => s("profissionais", v)} required missing={m} hint="Separados por vírgula" />
       <Divider />
       <SectionTitle letter="C" title="Serviços e Preçário" />
-      <Field label="Serviços individuais" value={d.servicos} onChange={(v) => s("servicos", v)} required missing={m} multi rows={8} placeholder={"Corte clássico — 12€ — 30min — Tesoura ou máquina, inclui lavagem\nBarba completa — 8€ — 20min — Navalha e toalha quente"} hint={"Um por linha, no formato:\nNome — Preço (fixo ou variável) — Duração — Descrição detalhada\n\nSe o preço não for fixo, escreva «Variável» ou «A partir de X€» e explique na descrição."} />
-      <Ex>{`Corte clássico — 12€ — 30min — Tesoura ou máquina, inclui lavagem e styling\nColoração Global — Variável (sob avaliação) — 120min — Mudança de tom com produtos sem amoníaco. O valor depende do comprimento e densidade do cabelo. Recomendamos vir com o cabelo lavado do dia anterior.`}</Ex>
-      <Field label="Packs, combos ou planos" value={d.packs} onChange={(v) => s("packs", v)} multi rows={4} placeholder={"Pack Completo — 18€ — Corte + Barba — 45min\nPack Noivo — 35€ — Corte + Barba + Tratamento — 90min"} hint="Combinações com desconto ou subscrições — se não tiver, deixe em branco" />
-      <Ex>{`Pack Noiva — 120€ — Cabelo + Maquilhagem + Unhas — 180min\nPack Pai & Filho — 20€ — 2 cortes — 50min`}</Ex>
+      <Field label="Serviços individuais" value={d.servicos} onChange={(v) => s("servicos", v)} required missing={m} multi rows={8} placeholder={"Corte clássico — 12€ — 30min — Tesoura ou máquina, inclui lavagem e styling\nBarba completa — 8€ — 20min — Navalha e toalha quente\nColoração Global — Variável (sob avaliação) — 120min — Mudança de tom com produtos sem amoníaco. O valor depende do comprimento e densidade do cabelo. Recomendamos vir com o cabelo lavado do dia anterior."} hint={"Um por linha, no formato:\nNome — Preço (fixo ou variável) — Duração — Descrição detalhada (método, preparação e requisitos)\n\nSe o preço não for fixo, escreva «Variável» ou «A partir de X€» e explique na descrição."} />
+      <Field label="Packs, combos ou planos" value={d.packs} onChange={(v) => s("packs", v)} multi rows={4} placeholder={"Pack Completo — 18€ — Corte + Barba — 45min\nPack Noivo — 35€ — Corte + Barba + Tratamento — 90min\nPack Noiva — 120€ — Cabelo + Maquilhagem + Unhas — 180min\nPack Pai & Filho — 20€ — 2 cortes — 50min"} hint="Combinações com desconto ou subscrições — se não tiver, deixe em branco" />
     </>
   );
 }
@@ -176,13 +164,12 @@ function Step3({ d, s }: StepProps) {
   return (
     <>
       <SectionTitle letter="D" title="Política de Agendamento e Funcionamento" />
-      <Field label="Aceitam clientes sem marcação prévia?" placeholder="Sim, por ordem de chegada" value={d.walkin} onChange={(v) => s("walkin", v)} hint={'Ex: "Apenas com marcação", "Sim, por ordem de chegada", "Walk-in sujeito a disponibilidade"'} />
-      <Field label="Política de atrasos e cancelamentos" placeholder="Aguardamos até 15 min, após isso a marcação é cancelada" value={d.cancelamento} onChange={(v) => s("cancelamento", v)} hint={'Ex: "Pedimos cancelamento com 24h de antecedência"'} />
-      <Field label="Tempo médio de espera (se aplicável)" placeholder="Com marcação o atendimento é imediato" value={d.espera} onChange={(v) => s("espera", v)} hint={'Se aceitam walk-ins — ex: "Sem marcação ao sábado pode ser 30-40min"'} />
+      <Field label="Aceitam clientes sem marcação prévia?" placeholder="Apenas com marcação; Sim, por ordem de chegada; Walk-in sujeito a disponibilidade" value={d.walkin} onChange={(v) => s("walkin", v)} />
+      <Field label="Política de atrasos e cancelamentos" placeholder="Pedimos cancelamento com 24h de antecedência. Aguardamos até 15 min, após isso a marcação é cancelada." value={d.cancelamento} onChange={(v) => s("cancelamento", v)} />
+      <Field label="Tempo médio de espera (se aplicável)" placeholder="Com marcação o atendimento é imediato. Sem marcação ao sábado pode ser 30-40min." value={d.espera} onChange={(v) => s("espera", v)} hint="Se aceitam walk-ins" />
       <Divider />
       <SectionTitle letter="E" title="Atendimento Fora do Espaço / Urgências" />
-      <Field label="Presta serviços fora do seu espaço físico ou tem canal de urgências?" value={d.fora_espaco} onChange={(v) => s("fora_espaco", v)} multi rows={3} placeholder="Fazemos deslocações ao domicílio com taxa extra de 10€" hint="Domicílios, consultas online, piquete de urgência — se não se aplica, deixe em branco" />
-      <Ex>{`"Damos consultas presenciais e também online via Zoom."\n"Temos um piquete de urgência 24/7 pelo número X, com taxas noturnas."\n"Fazemos deslocações a hotéis/quintas para casamentos com taxa de 0.40€/km."`}</Ex>
+      <Field label="Presta serviços fora do seu espaço físico ou tem canal de urgências?" value={d.fora_espaco} onChange={(v) => s("fora_espaco", v)} multi rows={4} placeholder={"Damos consultas presenciais e também online via Zoom.\nTemos um piquete de urgência 24/7 pelo número X, com taxas noturnas.\nFazemos deslocações a hotéis/quintas para casamentos com taxa de 0.40€/km."} hint="Domicílios, consultas online, piquete de urgência — se não se aplica, deixe em branco" />
     </>
   );
 }
@@ -192,9 +179,8 @@ function Step4({ d, s, m }: StepProps) {
     <>
       <SectionTitle letter="F" title="Pagamentos, Parcerias e Fidelização" />
       <Field label="Métodos de pagamento aceites" placeholder="Dinheiro, Multibanco, MB Way" value={d.pagamentos} onChange={(v) => s("pagamentos", v)} required missing={m} />
-      <Field label="Programa de fidelização ou benefícios" placeholder="Ao 10º serviço, o 11º é grátis" value={d.fidelidade} onChange={(v) => s("fidelidade", v)} hint={'Ex: "Temos cartão de pontos físico", "Não temos" — se não tiver, deixe em branco'} />
-      <Field label="Trabalha com algum seguro, subsistema de saúde ou parceria de descontos?" value={d.parcerias} onChange={(v) => s("parcerias", v)} multi rows={2} placeholder="Trabalhamos com a Multicare e AdvanceCare" hint="Se não se aplica, deixe em branco" />
-      <Ex>{`"Trabalhamos com a Multicare e AdvanceCare."\n"Temos 10% de desconto para estudantes da UP."`}</Ex>
+      <Field label="Programa de fidelização ou benefícios" placeholder="Ao 10º serviço, o 11º é grátis. Temos cartão de pontos físico. Não temos." value={d.fidelidade} onChange={(v) => s("fidelidade", v)} hint="Se não tiver, deixe em branco" />
+      <Field label="Trabalha com algum seguro, subsistema de saúde ou parceria de descontos?" value={d.parcerias} onChange={(v) => s("parcerias", v)} multi rows={3} placeholder={"Trabalhamos com a Multicare e AdvanceCare.\nTemos 10% de desconto para estudantes da UP."} hint="Se não se aplica, deixe em branco" />
     </>
   );
 }
@@ -203,12 +189,11 @@ function Step5({ d, s }: StepProps) {
   return (
     <>
       <SectionTitle letter="G" title="O Espaço e Logística" />
-      <Field label="Estacionamento e acessos" placeholder="Parque gratuito nas traseiras" value={d.estacionamento} onChange={(v) => s("estacionamento", v)} hint={'Ex: "Estacionamento pago (zona azul) na rua", "Fácil estacionar na rua"'} />
-      <Field label="Regras e comodidades do espaço" value={d.espaco_info} onChange={(v) => s("espaco_info", v)} multi rows={4} placeholder={"Temos Wi-Fi e café gratuito.\nEspaço acessível para cadeira de rodas.\nCrianças a partir dos 3 anos."} hint="Wi-Fi, bebidas, acessibilidade, restrições de idade, acompanhantes, animais — tudo o que o cliente deve saber sobre o espaço" />
-      <Ex>{`"Temos Wi-Fi e café gratuito. Não é permitida a entrada de animais. Pedimos para não trazer acompanhantes por falta de espaço na sala de espera."`}</Ex>
+      <Field label="Estacionamento e acessos" placeholder="Parque gratuito nas traseiras. Estacionamento pago (zona azul) na rua. Fácil estacionar na rua." value={d.estacionamento} onChange={(v) => s("estacionamento", v)} />
+      <Field label="Regras e comodidades do espaço" value={d.espaco_info} onChange={(v) => s("espaco_info", v)} multi rows={4} placeholder={"Temos Wi-Fi e café gratuito.\nEspaço acessível para cadeira de rodas.\nCrianças a partir dos 3 anos.\nNão é permitida a entrada de animais. Pedimos para não trazer acompanhantes por falta de espaço na sala de espera."} hint="Wi-Fi, bebidas, acessibilidade, restrições de idade, acompanhantes, animais — tudo o que o cliente deve saber sobre o espaço" />
       <Divider />
       <SectionTitle letter="H" title="Venda de Produtos" />
-      <Field label="Vende produtos físicos no espaço?" value={d.produtos} onChange={(v) => s("produtos", v)} multi rows={3} placeholder={"Champô antiqueda — Marca X — 18€\nÓleo de barba — Captain Fawcett — 22€"} hint={'Formato: Tipo — Nome/Marca — Preço\nOu simplesmente: "Vendemos cremes e óleos — perguntar no espaço"\nSe não vende, deixe em branco'} />
+      <Field label="Vende produtos físicos no espaço?" value={d.produtos} onChange={(v) => s("produtos", v)} multi rows={3} placeholder={"Champô antiqueda — Marca X — 18€\nÓleo de barba — Captain Fawcett — 22€\nVendemos cremes e óleos — perguntar no espaço"} hint={"Formato: Tipo — Nome/Marca — Preço\nSe não vende, deixe em branco"} />
     </>
   );
 }
@@ -217,7 +202,7 @@ function Step6({ d, s, m }: StepProps) {
   return (
     <>
       <SectionTitle letter="I" title="Presença Online e Links" />
-      <Field label="Link principal de marcações (Booking)" placeholder="https://fresha.com/o-meu-negocio" value={d.booking_link} onChange={(v) => s("booking_link", v)} required missing={m} hint={'Link do Fresha, Booksy, Calendly, site próprio, ou "Marcações geridas por WhatsApp"'} />
+      <Field label="Link principal de marcações (Booking)" placeholder="https://fresha.com/o-meu-negocio ou Marcações geridas por WhatsApp" value={d.booking_link} onChange={(v) => s("booking_link", v)} required missing={m} hint="Link do Fresha, Booksy, Calendly, site próprio ou WhatsApp" />
       <Field label="Redes sociais e website" value={d.redes} onChange={(v) => s("redes", v)} multi rows={3} placeholder={"Instagram: @username\nFacebook: facebook.com/pagina\nWebsite: www.site.pt"} hint="Instagram, Facebook, TikTok, website — tudo o que tiver" />
       <Divider />
       <SectionTitle letter="K" title="Contacto de Suporte / Transmissão Humana" />
@@ -230,13 +215,11 @@ function Step7({ d, s }: StepProps) {
   return (
     <>
       <SectionTitle letter="J" title="Reclamações, Feedback ou Trocas" />
-      <Field label="Se um cliente não ficar satisfeito, qual é a vossa política?" value={d.reclamacoes} onChange={(v) => s("reclamacoes", v)} multi rows={3} placeholder="Pedimos que envie um e-mail para geral@email.com para que a gerência possa resolver." hint="Garantias, procedimento de reclamação, trocas — se não tiver política formal, descreva como lidam na prática" />
-      <Ex>{`"Damos uma garantia de 5 dias nas unhas de gel. Se alguma partir ou levantar nesse período, o arranjo é totalmente gratuito."\n"Pedimos que envie um e-mail para geral@email.com para que a gerência possa analisar e resolver."`}</Ex>
+      <Field label="Se um cliente não ficar satisfeito, qual é a vossa política?" value={d.reclamacoes} onChange={(v) => s("reclamacoes", v)} multi rows={4} placeholder={"Damos uma garantia de 5 dias nas unhas de gel. Se alguma partir ou levantar nesse período, o arranjo é totalmente gratuito.\nPedimos que envie um e-mail para geral@email.com para que a gerência possa analisar e resolver."} hint="Garantias, procedimento de reclamação, trocas — se não tiver política formal, descreva como lidam na prática" />
       <Divider />
       <SectionTitle letter="L" title="Mensagens Automatizadas e Notas Finais" />
-      <Field label="Mensagem de chamada perdida (personalizar)" value={d.missed_call_msg} onChange={(v) => s("missed_call_msg", v)} multi rows={3} hint={'Quando o cliente liga e ninguém atende, o sistema envia este WhatsApp automático. Se quiser alterar o modelo padrão, escreva a sua versão. Se não, deixe em branco.\n\nPadrão: "Olá! Não conseguimos atender a sua chamada de momento por estarmos em atendimento. Como o posso ajudar por aqui? Se preferir, pode fazer a sua marcação diretamente neste link: [LINK]"'} />
-      <Field label="Informações adicionais frequentes" value={d.extras} onChange={(v) => s("extras", v)} multi rows={5} placeholder={"Falamos Inglês e Francês.\nA profissional Maria não faz o serviço X às terças."} hint="Tudo o que os seus clientes costumam perguntar e que não foi coberto acima — quanto mais info, melhor o assistente responde" />
-      <Ex>{`"Falamos Inglês e Francês."\n"A profissional Maria não faz o serviço X às terças-feiras."\n"Não fazemos dreadlocks nem extensões."\n"Raspar a zero é grátis para quem está em quimioterapia."`}</Ex>
+      <Field label="Mensagem de chamada perdida (personalizar)" value={d.missed_call_msg} onChange={(v) => s("missed_call_msg", v)} multi rows={4} placeholder="Olá! Não conseguimos atender a sua chamada de momento por estarmos em atendimento. Como o posso ajudar por aqui? Se preferir, pode fazer a sua marcação diretamente neste link: [LINK]" hint="Quando o cliente liga e ninguém atende, o sistema envia este WhatsApp automático. Se quiser alterar o modelo padrão, escreva a sua versão. Se não, deixe em branco." />
+      <Field label="Informações adicionais frequentes" value={d.extras} onChange={(v) => s("extras", v)} multi rows={5} placeholder={"Falamos Inglês e Francês.\nA profissional Maria não faz o serviço X às terças-feiras.\nNão fazemos dreadlocks nem extensões.\nRaspar a zero é grátis para quem está em quimioterapia."} hint="Tudo o que os seus clientes costumam perguntar e que não foi coberto acima — quanto mais info, melhor o assistente responde" />
     </>
   );
 }
@@ -310,12 +293,12 @@ export default function OnboardingForm() {
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="text-center max-w-md">
-          <div className="w-[72px] h-[72px] rounded-full bg-success flex items-center justify-center mx-auto mb-6 text-3xl text-white font-bold">
+        <div className="text-center max-w-md bg-card border border-border rounded-[24px] px-8 py-10 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+          <div className="w-[72px] h-[72px] rounded-full bg-accent flex items-center justify-center mx-auto mb-6 text-3xl text-background font-bold shadow-[0_0_34px_rgba(255,212,0,0.22)]">
             ✓
           </div>
           <h2
-            className="text-2xl font-bold text-foreground mb-3"
+            className="text-3xl font-bold text-foreground mb-3"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Formulário enviado com sucesso!
@@ -331,36 +314,50 @@ export default function OnboardingForm() {
 
   return (
     <div className="min-h-screen">
-      <div ref={topRef} className="max-w-[620px] mx-auto px-5 pt-8 pb-12">
+      <div ref={topRef} className="max-w-[760px] mx-auto px-5 pt-7 pb-14">
         {/* Header */}
-        <div className="text-center mb-7">
-          <div className="text-xs font-semibold tracking-[2.5px] text-accent uppercase mb-2">
+        <div className="mb-8">
+          <div className="flex items-center justify-between gap-4 mb-12">
+            <div className="flex items-center gap-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_20px_rgba(255,212,0,0.65)]" />
+              <span
+                className="text-[21px] font-extrabold tracking-tight text-foreground"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Onboarding
+              </span>
+            </div>
+            <div className="hidden sm:flex rounded-full border border-border bg-card/80 px-4 py-2 text-xs font-semibold tracking-[0.28em] uppercase text-muted">
+              V1 / 2026
+            </div>
+          </div>
+          <div className="text-xs font-semibold tracking-[0.34em] text-accent uppercase mb-4">
             Formulário de Onboarding
           </div>
           <h1
-            className="text-[26px] font-bold text-foreground mb-1.5"
+            className="text-[46px] sm:text-[68px] font-bold text-foreground leading-[0.98] mb-5"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Configure o seu negócio
           </h1>
-          <p className="text-sm text-muted">
+          <p className="text-base sm:text-lg text-muted max-w-[620px] leading-relaxed">
             Preencha as informações para ativarmos o seu assistente virtual
           </p>
         </div>
 
         {/* Progress */}
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[13px] font-semibold text-accent">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[13px] font-semibold text-accent uppercase tracking-[0.18em]">
               {STEPS[step].icon} {STEPS[step].label}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-muted">
               {step + 1} / {STEPS.length}
             </span>
           </div>
-          <div className="h-1 bg-border-dark rounded overflow-hidden">
+          <div className="h-1.5 bg-border-dark rounded-full overflow-hidden">
             <div
-              className="h-full rounded bg-gradient-to-r from-accent-hover to-accent"
+              className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hover shadow-[0_0_18px_rgba(255,212,0,0.28)]"
               style={{
                 width: `${progress}%`,
                 transition: "width 0.4s ease",
@@ -370,29 +367,30 @@ export default function OnboardingForm() {
         </div>
 
         {/* Step pills */}
-        <div className="flex gap-1.5 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-7 flex-wrap">
           {STEPS.map((st, i) => (
             <button
               key={st.id}
               onClick={() => goTo(i)}
-              className="transition-all cursor-pointer"
+              className="transition-all cursor-pointer hover:-translate-y-0.5"
               style={{
-                padding: "5px 11px",
-                fontSize: 11,
+                padding: "7px 13px",
+                fontSize: 12,
                 fontWeight: i === step ? 600 : 400,
                 color:
-                  i === step ? "#fff" : i < step ? "#8b7355" : "#666",
+                  i === step ? "#080806" : i < step ? "#ffd400" : "#aaa397",
                 background:
                   i === step
-                    ? "#8b7355"
+                    ? "#ffd400"
                     : i < step
-                    ? "#ede8de"
+                    ? "#282312"
                     : "transparent",
                 border:
                   i === step
-                    ? "none"
-                    : `1px solid ${i < step ? "#d4cfc3" : "#e0ddd5"}`,
-                borderRadius: 18,
+                    ? "1px solid #ffd400"
+                    : `1px solid ${i < step ? "#514722" : "#383222"}`,
+                borderRadius: 999,
+                boxShadow: i === step ? "0 0 24px rgba(255,212,0,0.16)" : "none",
               }}
             >
               {st.icon} {st.label}
@@ -402,7 +400,7 @@ export default function OnboardingForm() {
 
         {/* Missing fields banner */}
         {showMissing && allMissing.length > 0 && (
-          <div className="bg-error-banner border border-error-border rounded-[10px] px-4 py-3.5 mb-5">
+          <div className="bg-error-banner border border-error-border rounded-[14px] px-4 py-3.5 mb-5 shadow-[0_14px_40px_rgba(0,0,0,0.22)]">
             <p className="text-sm font-semibold text-error-text mb-1">
               Faltam campos obrigatórios:
             </p>
@@ -414,13 +412,13 @@ export default function OnboardingForm() {
 
         {/* API error */}
         {apiError && (
-          <div className="bg-error-banner border border-error-border rounded-[10px] px-4 py-3.5 mb-5">
+          <div className="bg-error-banner border border-error-border rounded-[14px] px-4 py-3.5 mb-5 shadow-[0_14px_40px_rgba(0,0,0,0.22)]">
             <p className="text-sm font-semibold text-error-text">{apiError}</p>
           </div>
         )}
 
         {/* Form card */}
-        <div className="bg-card rounded-2xl border border-border-dark p-6 mb-6">
+        <div className="bg-card rounded-[22px] border border-border p-6 sm:p-8 mb-7 shadow-[0_26px_90px_rgba(0,0,0,0.38)]">
           <StepComp d={data} s={s} m={showMissing} />
         </div>
 
@@ -429,11 +427,11 @@ export default function OnboardingForm() {
           <button
             onClick={() => goTo(Math.max(0, step - 1))}
             disabled={step === 0}
-            className="px-6 py-3 text-[15px] font-medium rounded-[10px] border-[1.5px] transition-colors cursor-pointer disabled:cursor-not-allowed"
+            className="px-6 py-3 text-[15px] font-semibold rounded-full border-[1.5px] transition-all cursor-pointer disabled:cursor-not-allowed hover:-translate-y-0.5"
             style={{
-              color: step === 0 ? "#ccc" : "#8b7355",
-              borderColor: step === 0 ? "#e8e4dc" : "#8b7355",
-              background: "transparent",
+              color: step === 0 ? "#514b40" : "#ffd400",
+              borderColor: step === 0 ? "#241f15" : "#ffd400",
+              background: step === 0 ? "rgba(17,18,13,0.45)" : "transparent",
             }}
           >
             ← Anterior
@@ -443,9 +441,9 @@ export default function OnboardingForm() {
             <button
               onClick={handleSubmit}
               disabled={sending}
-              className="px-8 py-3 text-[15px] font-semibold text-white rounded-[10px] border-none transition-colors cursor-pointer disabled:cursor-wait"
+              className="px-8 py-3 text-[15px] font-bold text-background rounded-full border-none transition-all cursor-pointer disabled:cursor-wait shadow-[0_18px_50px_rgba(255,212,0,0.18)] hover:-translate-y-0.5"
               style={{
-                background: sending ? "#a89880" : "#8b7355",
+                background: sending ? "#7d6e23" : "#ffd400",
               }}
             >
               {sending ? "A enviar..." : "Enviar formulário ✓"}
@@ -453,14 +451,14 @@ export default function OnboardingForm() {
           ) : (
             <button
               onClick={() => goTo(step + 1)}
-              className="px-8 py-3 text-[15px] font-semibold text-white bg-accent rounded-[10px] border-none cursor-pointer hover:bg-accent-hover transition-colors"
+              className="px-8 py-3 text-[15px] font-bold text-background bg-accent rounded-full border-none cursor-pointer hover:bg-accent-hover transition-all hover:-translate-y-0.5 shadow-[0_18px_50px_rgba(255,212,0,0.18)]"
             >
               Seguinte →
             </button>
           )}
         </div>
 
-        <p className="text-[11px] text-gray-300 text-center mt-5">
+        <p className="text-[11px] text-muted text-center mt-5">
           <span className="text-error-text">*</span> Campos obrigatórios — se
           algo não se aplicar, salte ou escreva «não»
         </p>
