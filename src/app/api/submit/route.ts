@@ -2,6 +2,55 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!;
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
+
+const DEFAULT_PERSONALITY =
+  "Your tone is warm, conversational, and personable — like a helpful colleague at the front desk, not a corporate chatbot. Keep responses concise but never robotic; a touch of warmth or personality is welcome.";
+
+async function compilePersonality(instrucoes: string): Promise<string> {
+  if (!ANTHROPIC_KEY) return DEFAULT_PERSONALITY;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 300,
+        messages: [
+          {
+            role: "user",
+            content: `You are a prompt engineer. A local business owner has described how they want their AI WhatsApp assistant to behave. Convert their plain-language instructions into a single, well-structured paragraph for an AI system prompt.
+
+Start from this default personality:
+"${DEFAULT_PERSONALITY}"
+
+The owner's instructions (in Portuguese or English):
+"${instrucoes}"
+
+Rules:
+- Preserve the core identity (helpful assistant for a local appointment-based business)
+- Integrate the owner's instructions naturally — weave them into flowing prose, do not list them
+- Write in English (it will be mixed with other English system prompt content)
+- Keep it concise: 2-4 sentences maximum
+- Return ONLY the personality paragraph, no preamble, no explanation`,
+          },
+        ],
+      }),
+    });
+
+    const data = await res.json();
+    const text = data?.content?.[0]?.text?.trim();
+    return text || DEFAULT_PERSONALITY;
+  } catch (err) {
+    console.error("Personality compilation error:", err);
+    return DEFAULT_PERSONALITY;
+  }
+}
 
 function parseServicos(raw: string): object[] {
   if (!raw.trim()) return [];
@@ -69,6 +118,13 @@ export async function POST(req: NextRequest) {
     const staff = parseStaff(body.profissionais || "");
     const systemExtras = buildSystemPromptExtras(body);
 
+    // Compile personality if provided
+    let agentPersonalidade: string = DEFAULT_PERSONALITY;
+    const instrucoes = (body.agent_personalidade_instrucoes || "").trim();
+    if (instrucoes) {
+      agentPersonalidade = await compilePersonality(instrucoes);
+    }
+
     const row: Record<string, unknown> = {
       nome: body.nome,
       morada: body.morada || null,
@@ -79,6 +135,8 @@ export async function POST(req: NextRequest) {
       owner_whatsapp: body.owner_whatsapp || null,
       system_prompt_extras: systemExtras || null,
       staff: staff,
+      agent_personalidade_instrucoes: instrucoes || null,
+      agent_personalidade: agentPersonalidade,
     };
 
     if (body.missed_call_msg?.trim()) {

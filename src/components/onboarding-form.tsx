@@ -10,6 +10,7 @@ const STEPS = [
   { id: "espaco", label: "Espaço & Produtos", icon: "🏠" },
   { id: "online", label: "Online & Contactos", icon: "📱" },
   { id: "final", label: "Políticas & Notas", icon: "📋" },
+  { id: "assistente", label: "Assistente Virtual", icon: "🤖" },
 ];
 
 const ALL_REQ = [
@@ -224,6 +225,23 @@ function Step7({ d, s }: StepProps) {
   );
 }
 
+function Step8({ d, s }: StepProps) {
+  return (
+    <>
+      <SectionTitle letter="M" title="Personalidade do Assistente" />
+      <Field
+        label="Como deve o assistente falar com os seus clientes?"
+        value={d.agent_personalidade_instrucoes}
+        onChange={(v) => s("agent_personalidade_instrucoes", v)}
+        multi
+        rows={6}
+        hint={"Escreva em linguagem simples — não precisa de saber tecnologia.\nExemplos:\n• \"Usa sempre tutear os clientes\"\n• \"Sê muito formal e profissional\"\n• \"O meu negócio é descontraído, podes ser bem-disposto e fazer piadas\"\n• \"Quando perguntarem sobre preços, menciona sempre que temos promoções\"\n• \"Não uses emojis\"\n\nSe deixar em branco, o assistente usa um tom amigável e profissional por defeito."}
+        placeholder={"O meu negócio é descontraído e os clientes são jovens. Fala de forma informal e bem-disposta.\nUsa sempre tutear.\nQuando um cliente perguntar sobre o horário ao fim de semana, sugere que marquem com antecedência porque enche muito."}
+      />
+    </>
+  );
+}
+
 /* ─── MAIN ─── */
 
 const INITIAL: Record<string, string> = {
@@ -234,9 +252,10 @@ const INITIAL: Record<string, string> = {
   estacionamento: "", espaco_info: "", produtos: "",
   booking_link: "", redes: "", owner_whatsapp: "",
   reclamacoes: "", missed_call_msg: "", extras: "",
+  agent_personalidade_instrucoes: "",
 };
 
-const STEP_COMPONENTS = [Step1, Step2, Step3, Step4, Step5, Step6, Step7];
+const STEP_COMPONENTS = [Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8];
 
 export default function OnboardingForm() {
   const [step, setStep] = useState(0);
