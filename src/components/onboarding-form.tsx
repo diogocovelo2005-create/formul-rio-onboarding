@@ -21,7 +21,7 @@ const ALL_REQ = [
   "maps_link",
   "horarios",
   "profissionais",
-  "servicos",
+  "servicos_json",
   "pagamentos",
   "booking_link",
   "owner_whatsapp",
@@ -34,7 +34,7 @@ const REQ_LABELS: Record<string, string> = {
   maps_link: "Link Google Maps",
   horarios: "Horário",
   profissionais: "Profissionais",
-  servicos: "Serviços",
+  servicos_json: "Serviços",
   pagamentos: "Pagamentos",
   booking_link: "Link de marcações",
   owner_whatsapp: "WhatsApp do responsável",
@@ -149,6 +149,50 @@ function Step1({ d, s, m }: StepProps) {
   );
 }
 
+interface Servico {
+  nome: string;
+  preco: string;
+  duracao: string;
+  descricao: string;
+}
+
+const EMPTY_SERVICO: Servico = { nome: "", preco: "", duracao: "", descricao: "" };
+
+function ServiceCards({ label, hint, jsonKey, d, s, emptyLabel }: { label: string; hint: string; jsonKey: string; d: Record<string, string>; s: (k: string, v: string) => void; emptyLabel: string }) {
+  const items: Servico[] = (() => { try { return JSON.parse(d[jsonKey]); } catch { return []; } })();
+  const sync = (arr: Servico[]) => s(jsonKey, JSON.stringify(arr));
+  const update = (i: number, k: keyof Servico, v: string) => { const a = [...items]; a[i] = { ...a[i], [k]: v }; sync(a); };
+  const add = () => sync([...items, { ...EMPTY_SERVICO }]);
+  const remove = (i: number) => sync(items.filter((_, j) => j !== i));
+
+  const inputBase = "w-full px-4 py-3.5 text-[15px] rounded-[12px] outline-none transition-all font-[inherit] leading-relaxed shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] border-[1.5px] border-border bg-background/70 text-foreground placeholder:text-muted/50 focus:border-accent focus:bg-card focus:shadow-[0_0_0_4px_rgba(255,212,0,0.12)]";
+
+  return (
+    <>
+      <p className="text-[13px] text-muted mb-4 leading-snug whitespace-pre-line">{hint}</p>
+      {items.map((item, i) => (
+        <div key={i} className="relative border border-border rounded-[16px] bg-card/50 p-5 mb-4">
+          <button onClick={() => remove(i)} className="absolute top-3 right-3 text-muted hover:text-error transition-colors text-lg leading-none" title="Remover">✕</button>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-accent text-sm font-bold">{i + 1}.</span>
+            <span className="text-sm font-semibold text-foreground">{item.nome || "Novo serviço"}</span>
+            {item.preco && <span className="ml-auto text-[11px] uppercase tracking-wider text-muted bg-border-dark px-2 py-0.5 rounded-full">{item.preco}</span>}
+          </div>
+          <Field label="Nome do serviço" value={item.nome} onChange={(v) => update(i, "nome", v)} placeholder="Ex: Corte clássico" />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Preço" value={item.preco} onChange={(v) => update(i, "preco", v)} placeholder="12€, Variável, A partir de 25€" />
+            <Field label="Duração" value={item.duracao} onChange={(v) => update(i, "duracao", v)} placeholder="30min, 1h, 90min" />
+          </div>
+          <Field label="Descrição" value={item.descricao} onChange={(v) => update(i, "descricao", v)} multi rows={2} placeholder="Método, o que inclui, preparação necessária... (opcional)" />
+        </div>
+      ))}
+      <button onClick={add} className="w-full py-3.5 rounded-[12px] border-[1.5px] border-dashed border-accent/40 text-accent text-sm font-semibold hover:bg-accent/5 hover:border-accent transition-all mb-2">
+        + Adicionar {items.length === 0 ? emptyLabel : "outro"}
+      </button>
+    </>
+  );
+}
+
 function Step2({ d, s, m }: StepProps) {
   return (
     <>
@@ -156,8 +200,24 @@ function Step2({ d, s, m }: StepProps) {
       <Field label="Nomes dos profissionais (que recebem marcações)" placeholder="João, Maria, Rita" value={d.profissionais} onChange={(v) => s("profissionais", v)} required missing={m} hint="Separados por vírgula" />
       <Divider />
       <SectionTitle letter="C" title="Serviços e Preçário" />
-      <Field label="Serviços individuais" value={d.servicos} onChange={(v) => s("servicos", v)} required missing={m} multi rows={8} placeholder={"Corte clássico — 12€ — 30min — Tesoura ou máquina, inclui lavagem e styling\nBarba completa — 8€ — 20min — Navalha e toalha quente\nColoração Global — Variável (sob avaliação) — 120min — Mudança de tom com produtos sem amoníaco. O valor depende do comprimento e densidade do cabelo. Recomendamos vir com o cabelo lavado do dia anterior."} hint={"Um por linha, no formato:\nNome — Preço (fixo ou variável) — Duração — Descrição detalhada (método, preparação e requisitos)\n\nSe o preço não for fixo, escreva «Variável» ou «A partir de X€» e explique na descrição."} />
-      <Field label="Packs, combos ou planos" value={d.packs} onChange={(v) => s("packs", v)} multi rows={4} placeholder={"Pack Completo — 18€ — Corte + Barba — 45min\nPack Noivo — 35€ — Corte + Barba + Tratamento — 90min\nPack Noiva — 120€ — Cabelo + Maquilhagem + Unhas — 180min\nPack Pai & Filho — 20€ — 2 cortes — 50min"} hint="Combinações com desconto ou subscrições — se não tiver, deixe em branco" />
+      <ServiceCards
+        label="Serviços individuais"
+        hint={"Adicione cada serviço com o seu preço e duração.\nSe o preço não for fixo, escreva «Variável» ou «A partir de X€»."}
+        jsonKey="servicos_json"
+        d={d}
+        s={s}
+        emptyLabel="serviço"
+      />
+      <Divider />
+      <SectionTitle letter="C+" title="Packs, Combos ou Planos" />
+      <ServiceCards
+        label="Packs e combos"
+        hint="Combinações com desconto ou subscrições — se não tiver, pode avançar."
+        jsonKey="packs_json"
+        d={d}
+        s={s}
+        emptyLabel="pack ou combo"
+      />
     </>
   );
 }
@@ -325,7 +385,7 @@ function Step9({ d, s }: StepProps) {
 
 const INITIAL: Record<string, string> = {
   nome: "", setor: "", morada: "", maps_link: "", horarios: "", excecoes: "",
-  profissionais: "", servicos: "", packs: "",
+  profissionais: "", servicos_json: "[]", packs_json: "[]",
   walkin: "", cancelamento: "", espera: "", fora_espaco: "",
   pagamentos: "", fidelidade: "", parcerias: "",
   estacionamento: "", espaco_info: "", produtos: "",
@@ -360,7 +420,14 @@ export default function OnboardingForm() {
   const StepComp = STEP_COMPONENTS[step];
   const isLast = step === STEPS.length - 1;
   const progress = ((step + 1) / STEPS.length) * 100;
-  const allMissing = ALL_REQ.filter((k) => !data[k].trim());
+  const allMissing = ALL_REQ.filter((k) => {
+    const v = data[k]?.trim();
+    if (!v) return true;
+    if (k === "servicos_json") {
+      try { return JSON.parse(v).filter((i: { nome?: string }) => i.nome?.trim()).length === 0; } catch { return true; }
+    }
+    return false;
+  });
 
   const handleSubmit = async () => {
     if (allMissing.length > 0) {

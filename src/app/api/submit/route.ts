@@ -52,19 +52,20 @@ Rules:
   }
 }
 
-function parseServicos(raw: string): object[] {
-  if (!raw.trim()) return [];
-  return raw
-    .split("\n")
-    .filter((l) => l.trim())
-    .map((line) => {
-      const parts = line.split("—").map((p) => p.trim());
-      const nome = parts[0] || line.trim();
-      const preco = parts[1] || null;
-      const duracao = parts[2] || null;
-      const descricao = parts[3] || null;
-      return { nome, preco, duracao, descricao };
-    });
+function parseServicosJson(raw: string): object[] {
+  try {
+    const items = JSON.parse(raw || "[]");
+    return items
+      .filter((i: { nome?: string }) => i.nome?.trim())
+      .map((i: { nome: string; preco?: string; duracao?: string; descricao?: string }) => ({
+        nome: i.nome.trim(),
+        preco: i.preco?.trim() || null,
+        duracao: i.duracao?.trim() || null,
+        descricao: i.descricao?.trim() || null,
+      }));
+  } catch {
+    return [];
+  }
 }
 
 function parseStaff(raw: string): string[] {
@@ -169,8 +170,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const servicos = [
-      ...parseServicos(body.servicos || ""),
-      ...parseServicos(body.packs || "").map((p) => ({ ...p, tipo: "pack" })),
+      ...parseServicosJson(body.servicos_json || "[]"),
+      ...parseServicosJson(body.packs_json || "[]").map((p) => ({ ...p, tipo: "pack" })),
     ];
 
     const staff = parseStaff(body.profissionais || "");
