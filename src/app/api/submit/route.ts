@@ -106,6 +106,64 @@ function buildSystemPromptExtras(data: Record<string, string>): string {
   return sections.join("\n");
 }
 
+async function generatePromoMessage(promo: {
+  tipo: string;
+  titulo: string;
+  detalhes: string;
+  data_inicio?: string;
+  data_fim?: string;
+  localizacao?: string;
+  condicoes?: string;
+}): Promise<string | null> {
+  if (!ANTHROPIC_KEY) return null;
+
+  const parts = [
+    `Type: ${promo.tipo === "event" ? "Event" : promo.tipo === "campaign" ? "Campaign" : "Promotion"}`,
+    `Name: ${promo.titulo}`,
+    `Details: ${promo.detalhes}`,
+    promo.data_inicio ? `Start date: ${promo.data_inicio}` : null,
+    promo.data_fim ? `End date: ${promo.data_fim}` : null,
+    promo.localizacao ? `Location: ${promo.localizacao}` : null,
+    promo.condicoes ? `Conditions: ${promo.condicoes}` : null,
+  ].filter(Boolean).join("\n");
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 300,
+        messages: [
+          {
+            role: "user",
+            content: `Write a concise, friendly WhatsApp message (2-3 sentences max) for a local business to send to clients about this promotion/event.
+
+${parts}
+
+Rules:
+- Use {{nome}} as placeholder for the client's first name
+- Use {{booking_link}} as placeholder for booking link if relevant
+- Write in Portuguese (European)
+- Keep it natural and warm, not corporate
+- Return ONLY the message text, nothing else`,
+          },
+        ],
+      }),
+    });
+
+    const data = await res.json();
+    return data?.content?.[0]?.text?.trim() || null;
+  } catch (err) {
+    console.error("Promo message generation error:", err);
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -164,8 +222,63 @@ export async function POST(req: NextRequest) {
     }
 
     const created = await res.json();
+    const businessId = created[0]?.id;
 
-    return NextResponse.json({ ok: true, id: created[0]?.id });
+    // Process promotions if any
+    let promosRaw: Array<{
+      tipo: string;
+      titulo: string;
+      detalhes: string;
+      data_inicio: string;
+      data_fim: string;
+      localizacao: string;
+      condicoes: string;
+    }> = [];
+    try {
+      promosRaw = JSON.parse(body.promotions_json || "[]");
+    } catch {
+      promosRaw = [];
+    }
+
+    if (businessId && promosRaw.length > 0) {
+      const validPromos = promosRaw.filter((p) => p.titulo?.trim());
+
+      // Generate WhatsApp messages in parallel
+      const messages = await Promise.all(
+        validPromos.map((p) => generatePromoMessage(p))
+      );
+
+      const today = new Date().toISOString().split("T")[0];
+      const promoRows = validPromos.map((p, i) => ({
+        business_id: businessId,
+        titulo: p.titulo.trim(),
+        mensagem: messages[i] || null,
+        tipo: p.tipo || "promotion",
+        detalhes: p.detalhes?.trim() || null,
+        localizacao: p.localizacao?.trim() || null,
+        condicoes: p.condicoes?.trim() || null,
+        data_inicio: p.data_inicio || null,
+        data_fim: p.data_fim || null,
+        segmento: "all",
+        ativo: !p.data_inicio || p.data_inicio <= today,
+      }));
+
+      const promoRes = await fetch(`${SUPABASE_URL}/rest/v1/promotions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify(promoRows),
+      });
+
+      if (!promoRes.ok) {
+        console.error("Promotions insert error:", await promoRes.text());
+      }
+    }
+
+    return NextResponse.json({ ok: true, id: businessId });
   } catch (err) {
     console.error("API error:", err);
     return NextResponse.json(

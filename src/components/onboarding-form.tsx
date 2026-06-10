@@ -11,6 +11,7 @@ const STEPS = [
   { id: "online", label: "Online & Contactos", icon: "📱" },
   { id: "final", label: "Políticas & Notas", icon: "📋" },
   { id: "assistente", label: "Assistente Virtual", icon: "🤖" },
+  { id: "promocoes", label: "Promoções & Eventos", icon: "🎯" },
 ];
 
 const ALL_REQ = [
@@ -242,6 +243,84 @@ function Step8({ d, s }: StepProps) {
   );
 }
 
+interface Promo {
+  tipo: string;
+  titulo: string;
+  detalhes: string;
+  data_inicio: string;
+  data_fim: string;
+  localizacao: string;
+  condicoes: string;
+}
+
+const EMPTY_PROMO: Promo = { tipo: "promotion", titulo: "", detalhes: "", data_inicio: "", data_fim: "", localizacao: "", condicoes: "" };
+const TIPO_LABELS: Record<string, string> = { promotion: "Promoção", event: "Evento", campaign: "Campanha" };
+
+function Step9({ d, s }: StepProps) {
+  const promos: Promo[] = (() => { try { return JSON.parse(d.promotions_json); } catch { return []; } })();
+  const sync = (arr: Promo[]) => s("promotions_json", JSON.stringify(arr));
+  const update = (i: number, k: keyof Promo, v: string) => { const a = [...promos]; a[i] = { ...a[i], [k]: v }; sync(a); };
+  const add = () => sync([...promos, { ...EMPTY_PROMO }]);
+  const remove = (i: number) => sync(promos.filter((_, j) => j !== i));
+
+  const inputBase = "w-full px-4 py-3.5 text-[15px] rounded-[12px] outline-none transition-all font-[inherit] leading-relaxed shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] border-[1.5px] border-border bg-background/70 text-foreground placeholder:text-muted/50 focus:border-accent focus:bg-card focus:shadow-[0_0_0_4px_rgba(255,212,0,0.12)]";
+
+  return (
+    <>
+      <SectionTitle letter="N" title="Promoções & Eventos" />
+      <p className="text-[13px] text-muted mb-5 leading-snug">
+        Adicione promoções, eventos ou campanhas que estão a decorrer ou que tem planeadas.
+        {"\n"}Pode deixar esta secção vazia e adicionar mais tarde.
+      </p>
+
+      {promos.map((p, i) => (
+        <div key={i} className="relative border border-border rounded-[16px] bg-card/50 p-5 mb-4">
+          <button onClick={() => remove(i)} className="absolute top-3 right-3 text-muted hover:text-error transition-colors text-lg leading-none" title="Remover">✕</button>
+
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-accent text-sm font-bold">{i + 1}.</span>
+            <span className="text-sm font-semibold text-foreground">{p.titulo || "Nova entrada"}</span>
+            <span className="ml-auto text-[11px] uppercase tracking-wider text-muted bg-border-dark px-2 py-0.5 rounded-full">{TIPO_LABELS[p.tipo] || p.tipo}</span>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-foreground mb-1.5">Tipo</label>
+            <select value={p.tipo} onChange={(e) => update(i, "tipo", e.target.value)} className={`${inputBase} cursor-pointer`}>
+              <option value="promotion">Promoção</option>
+              <option value="event">Evento</option>
+              <option value="campaign">Campanha</option>
+            </select>
+          </div>
+
+          <Field label="Nome" value={p.titulo} onChange={(v) => update(i, "titulo", v)} placeholder="Ex: Desconto de Verão 20%" />
+          <Field label="Detalhes" value={p.detalhes} onChange={(v) => update(i, "detalhes", v)} multi rows={3} placeholder="Descreva a promoção, o que inclui, como funciona..." />
+
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Data início</label>
+              <input type="date" value={p.data_inicio} onChange={(e) => update(i, "data_inicio", e.target.value)} className={inputBase} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Data fim</label>
+              <input type="date" value={p.data_fim} onChange={(e) => update(i, "data_fim", e.target.value)} className={inputBase} />
+            </div>
+          </div>
+
+          {p.tipo === "event" && (
+            <Field label="Localização" value={p.localizacao} onChange={(v) => update(i, "localizacao", v)} placeholder="Morada, link Google Maps, ou descrição do local" />
+          )}
+
+          <Field label="Condições" value={p.condicoes} onChange={(v) => update(i, "condicoes", v)} multi rows={2} placeholder="Ex: Válido apenas para novos clientes, mínimo 2 serviços, etc. (opcional)" />
+        </div>
+      ))}
+
+      <button onClick={add} className="w-full py-3.5 rounded-[12px] border-[1.5px] border-dashed border-accent/40 text-accent text-sm font-semibold hover:bg-accent/5 hover:border-accent transition-all">
+        + Adicionar {promos.length === 0 ? "promoção ou evento" : "outra"}
+      </button>
+    </>
+  );
+}
+
 /* ─── MAIN ─── */
 
 const INITIAL: Record<string, string> = {
@@ -253,9 +332,10 @@ const INITIAL: Record<string, string> = {
   booking_link: "", redes: "", owner_whatsapp: "",
   reclamacoes: "", missed_call_msg: "", extras: "",
   agent_personalidade_instrucoes: "",
+  promotions_json: "[]",
 };
 
-const STEP_COMPONENTS = [Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8];
+const STEP_COMPONENTS = [Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9];
 
 export default function OnboardingForm() {
   const [step, setStep] = useState(0);
